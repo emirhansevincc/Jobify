@@ -12,8 +12,13 @@ const errorHandlerMiddleware = (err, req, res, next) => {
         defaultError.msg = Object.values(err.errors).map((val) => val.message).join(',');
     }
 
+    if (err.code === 11000) {
+        defaultError.statusCode = StatusCodes.BAD_REQUEST;
+        defaultError.msg = `${Object.keys(err.keyValue)} already exists`;
+    }
+
     res.status(defaultError.statusCode).json({ msg: defaultError.msg })
-    res.status(defaultError.statusCode).json({msg: err});
+    // res.status(defaultError.statusCode).json({msg: err});
 
 } 
 
@@ -57,5 +62,23 @@ export default errorHandlerMiddleware;
 //         "_message": "User validation failed",
 //         "name": "ValidationError",
 //         "message": "User validation failed: password: Password is required, name: Name is required"
+//     }
+// }
+
+
+
+
+
+
+// {
+//     "msg": {
+//         "index": 0,
+//         "code": 11000,
+//         "keyPattern": {
+//             "email": 1
+//         },
+//         "keyValue": {
+//             "email": "emirhan@gmail.com"
+//         }
 //     }
 // }
