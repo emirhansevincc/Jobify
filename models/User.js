@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import validator from "validator";
+import bcrypt from "bcryptjs";
 
 const UserSchema = new Schema({
     name: {
@@ -29,6 +30,11 @@ const UserSchema = new Schema({
         trim: true,
         default: "my city",
     }, 
+});
+
+UserSchema.pre("save", function (next) {
+    this.password = bcrypt.hashSync(this.password, 10);
+    next();
 });
 
 export default mongoose.model("User", UserSchema);
