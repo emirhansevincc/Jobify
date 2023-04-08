@@ -10,8 +10,11 @@ import {
     SETUP_USER_BEGIN,
     SETUP_USER_SUCCESS,
     SETUP_USER_ERROR,
-    TOGGLE_SIDEBAR
+    TOGGLE_SIDEBAR,
+    LOGOUT_USER,
 } from './actions';
+
+import { initialState } from './appContext';
 
 const reducer = (state, action) => {
     if(action.type === DISPLAY_ALERT) {
@@ -104,6 +107,16 @@ const reducer = (state, action) => {
             ...state,
             showSidebar: !state.showSidebar
         };
+    }
+    if(action.type === LOGOUT_USER) {
+        return {
+            // We imported initialState from appContext.js not state.action because we want to reset the state to its initial state 
+            ...initialState,
+            token: null,
+            user: null,
+            userLocation: null,
+            jobLocation: null,
+        }
     }
 
     throw new Error(`Unhandled action type: ${action.type}`);
