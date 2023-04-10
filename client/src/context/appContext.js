@@ -41,6 +41,31 @@ const AppContext = React.createContext();
 const AppProvider = ({ children }) => {
     const [state, dispatch] = useReducer(reducer, initialState);
 
+    // Axios
+    const authFetch = axios.create({
+        baseURL: '/api/v1',
+        headers: {
+            Authorization: `Bearer ${state.token}`,
+        },
+    });
+
+    authFetch.interceptors.request.use((config) => {
+        config.headers['Authorization'] = `Bearer ${state.token}`;
+        return config;
+    }, (error) => {
+        return Promise.reject(error);
+    });
+
+    authFetch.interceptors.response.use((response) => {
+        return response;
+    }, (error) => {
+        if (error.response.status === 401) {
+            console.log('Auth error');
+        } 
+
+        return Promise.reject(error);
+    });
+
     const displayAlert = (text, type) => {
         dispatch({ type: DISPLAY_ALERT});
         clearAlert()
@@ -112,7 +137,14 @@ const AppProvider = ({ children }) => {
     }
 
     const updateUser = (currentUser) => {
-        console.log(currentUser);
+        try {
+            // Eğer authFetchi kullanırsan ve altta ek olarak farklı bir axios işlemi yaparsan autfetch teki token diğer işleme gitmez çünkü baseurl /api/v1 oluyor. ama baseurl koymasaydın yapacağın herhangi bir axios işlemi için token gereksiz yere gönderilirdi ve güvenlik açığı oluşurdu. (Axios-Custom-Instance)
+            const {data} = authFetch.patch(`/auth/updateUser`, currentUser);
+            console.log(data);
+            
+        } catch (error) {
+            // console.log(error.response);
+        }
     }
 
     return (
