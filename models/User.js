@@ -40,13 +40,17 @@ const UserSchema = new Schema({
     }, 
 });
 
-UserSchema.pre("save", async function (next) {
+UserSchema.pre("save", async function () {
+    // console.log(this.modifiedPaths());      // if you changed name : [ 'name' ]
+    // console.log(this.isModified("name"));   // true
+
+    if (!this.isModified("password")) return
+
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
-    next();
 });
 
-UserSchema.methods.createJWT = function (password) {
+UserSchema.methods.createJWT = function () {
     return jwt.sign(
         {
             userId: this._id,
