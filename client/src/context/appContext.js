@@ -17,6 +17,9 @@ import {
     SETUP_USER_ERROR,
     TOGGLE_SIDEBAR,
     LOGOUT_USER,
+    UPDATE_USER_SUCCESS,
+    UPDATE_USER_ERROR,
+    UPDATE_USER_BEGIN,
 } from './actions';
 
 const token = localStorage.getItem('token');
@@ -44,9 +47,6 @@ const AppProvider = ({ children }) => {
     // Axios
     const authFetch = axios.create({
         baseURL: '/api/v1',
-        headers: {
-            Authorization: `Bearer ${state.token}`,
-        },
     });
 
     authFetch.interceptors.request.use((config) => {
@@ -59,8 +59,9 @@ const AppProvider = ({ children }) => {
     authFetch.interceptors.response.use((response) => {
         return response;
     }, (error) => {
+        // console.log(error);
         if (error.response.status === 401) {
-            console.log('Auth error');
+            logoutUser();
         } 
 
         return Promise.reject(error);
@@ -136,15 +137,21 @@ const AppProvider = ({ children }) => {
         removeUserFromLocalStorage();
     }
 
-    const updateUser = (currentUser) => {
+    const updateUser = async (currentUser) => {
+        dispatch({ type: UPDATE_USER_BEGIN });
         try {
             // Eğer authFetchi kullanırsan ve altta ek olarak farklı bir axios işlemi yaparsan autfetch teki token diğer işleme gitmez çünkü baseurl /api/v1 oluyor. ama baseurl koymasaydın yapacağın herhangi bir axios işlemi için token gereksiz yere gönderilirdi ve güvenlik açığı oluşurdu. (Axios-Custom-Instance)
-            const {data} = authFetch.patch(`/auth/updateUser`, currentUser);
+            const { data } = await authFetch.patch(`/auth/updateUser`, currentUser);
+            const { user, location, token } = data;
+            dispatch({ type: UPDATE_USER_SUCCESS, payload: { user, location, token } });
+            addUserToLocalStorage({ user, token: initialState.token, location });
             console.log(data);
-            
         } catch (error) {
-            // console.log(error.response);
+            if (error.response.status !== 401) {
+                dispatch({ type: UPDATE_USER_ERROR, payload: {msg: error.response.data.msg} });
+            }
         }
+        clearAlert()
     }
 
     return (
