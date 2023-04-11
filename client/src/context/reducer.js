@@ -15,15 +15,20 @@ import {
     UPDATE_USER_BEGIN,
     UPDATE_USER_SUCCESS,
     UPDATE_USER_ERROR,
+    HANDLE_CHANGE,
+    CLEAR_VALUES,
+    CREATE_JOB_BEGIN,
+    CREATE_JOB_SUCCESS,
+    CREATE_JOB_ERROR,
 } from './actions';
 
 import { initialState } from './appContext';
 
 const reducer = (state, action) => {
-    if(action.type === DISPLAY_ALERT) {
+    if (action.type === DISPLAY_ALERT) {
         return { ...state, showAlert: true, alertText: 'Please provide all values!', alertType: 'danger' };
     }
-    if(action.type === CLEAR_ALERT) {
+    if (action.type === CLEAR_ALERT) {
         return { ...state, showAlert: false, alertText: '', alertType: '' };
     }
 
@@ -79,14 +84,14 @@ const reducer = (state, action) => {
     // }
 
 
-    if(action.type === SETUP_USER_BEGIN) {
+    if (action.type === SETUP_USER_BEGIN) {
         return { ...state, isLoading: true };
     }
-    if(action.type === SETUP_USER_SUCCESS) {
+    if (action.type === SETUP_USER_SUCCESS) {
         return {
             ...state,
             isLoading: false,
-            token : action.payload.token,
+            token: action.payload.token,
             user: action.payload.user,
             userLocation: action.payload.location,
             jobLocation: action.payload.location,
@@ -95,23 +100,23 @@ const reducer = (state, action) => {
             alertType: 'success',
         }
     }
-    if(action.type === SETUP_USER_ERROR) {
-        return { 
-            ...state, 
-            isLoading: false, 
-            showAlert: true, 
-            alertText: action.payload.msg, 
-            alertType: 'danger' 
+    if (action.type === SETUP_USER_ERROR) {
+        return {
+            ...state,
+            isLoading: false,
+            showAlert: true,
+            alertText: action.payload.msg,
+            alertType: 'danger'
         };
     }
 
-    if(action.type === TOGGLE_SIDEBAR) {
-        return { 
+    if (action.type === TOGGLE_SIDEBAR) {
+        return {
             ...state,
             showSidebar: !state.showSidebar
         };
     }
-    if(action.type === LOGOUT_USER) {
+    if (action.type === LOGOUT_USER) {
         return {
             // We imported initialState from appContext.js not state.action because we want to reset the state to its initial state 
             ...initialState,
@@ -124,32 +129,70 @@ const reducer = (state, action) => {
 
     if (action.type === UPDATE_USER_BEGIN) {
         return { ...state, isLoading: true }
-      }
-      
-      if (action.type === UPDATE_USER_SUCCESS) {
+    }
+
+    if (action.type === UPDATE_USER_SUCCESS) {
+        return {
+            ...state,
+            isLoading: false,
+            token: action.payload.token,
+            user: action.payload.user,
+            userLocation: action.payload.location,
+            jobLocation: action.payload.location,
+            showAlert: true,
+            alertType: 'success',
+            alertText: 'User Profile Updated!',
+        }
+    }
+    if (action.type === UPDATE_USER_ERROR) {
+        return {
+            ...state,
+            isLoading: false,
+            showAlert: true,
+            alertType: 'danger',
+            alertText: action.payload.msg,
+        }
+    }
+
+    if (action.type === HANDLE_CHANGE) {
+        const { name, value } = action.payload;
+        return { ...state, [name]: value };
+    }
+    if (action.type === CLEAR_VALUES) {
+        const initialState = {
+            isEditing: false,
+            editJobId: '',
+            position: '',
+            company: '',
+            jobLocation: state.userLocation,
+            jobType: 'full-time',
+            status: 'pending',
+        }
+        return { ...state, ...initialState };
+    }
+    if (action.type === CREATE_JOB_BEGIN) {
+        return { ...state, isLoading: true };
+    }
+    if (action.type === CREATE_JOB_SUCCESS) {
         return {
           ...state,
           isLoading: false,
-          token:action.payload.token,
-          user: action.payload.user,
-          userLocation: action.payload.location,
-          jobLocation: action.payload.location,
           showAlert: true,
           alertType: 'success',
-          alertText: 'User Profile Updated!',
-        }
-      }
-      if (action.type === UPDATE_USER_ERROR) {
+          alertText: 'New Job Created!',
+        };
+    }
+    if (action.type === CREATE_JOB_ERROR) {
         return {
           ...state,
           isLoading: false,
           showAlert: true,
           alertType: 'danger',
           alertText: action.payload.msg,
-        }
-      }
+        };
+    }
 
-    throw new Error(`Unhandled action type: ${action.type}`);
+    throw new Error(`No Matching "${action.type}" - action type`);
 }
 
 export default reducer;
