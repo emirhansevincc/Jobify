@@ -19,9 +19,45 @@ const createJob = async (req, res) => {
 };
 
 const getAllJobs = async (req, res) => {
-    const jobs = await Job.find({ createdBy: req.user.userId });
-    res.status(StatusCodes.OK).json({ jobs, totalJobs: jobs.length, numOfPages: 1 });
-}
+    const { search, status, jobType, sort } = req.query;
+
+    const queryObject = {
+        createdBy: req.user.userId,
+    };
+
+    if (status !== 'all') {
+        queryObject.status = status;
+    }
+    if (jobType !== 'all') {
+        queryObject.jobType = jobType;
+    }
+    if (search) {
+        queryObject.position = { $regex: search, $options: 'i' };
+    }
+
+    // NO AWAIT
+    let result = Job.find(queryObject);
+
+    // chain sort conditions
+    if (sort === 'latest') {
+        result = result.sort('-createdAt');
+    }
+    if (sort === 'oldest') {
+        result = result.sort('createdAt');
+    }
+    if (sort === 'a-z') {
+        result = result.sort('position');
+    }
+    if (sort === 'z-a') {
+        result = result.sort('-position');
+    } 
+
+    const jobs = await result;
+
+    res
+        .status(StatusCodes.OK)
+        .json({ jobs, totalJobs: jobs.length, numOfPages: 1 });
+};
 
 const updateJob = async (req, res) => {
     const { id: jobId } = req.params;
@@ -68,8 +104,8 @@ const deleteJob = async (req, res) => {
 
 const showStats = async (req, res) => {
     let stats = await Job.aggregate([
-        {$match: {createdBy: new mongoose.Types.ObjectId(req.user.userId)}},
-        {$group: { _id: '$status', count: { $sum: 1 } }}
+        { $match: { createdBy: new mongoose.Types.ObjectId(req.user.userId) } },
+        { $group: { _id: '$status', count: { $sum: 1 } } }
     ]);
 
     stats = stats.reduce((acc, curr) => {
@@ -83,21 +119,23 @@ const showStats = async (req, res) => {
         interview: stats.interview || 0,
         declined: stats.declined || 0,
     };
-    
+
 
     let monthlyApplications = await Job.aggregate([
         { $match: { createdBy: new mongoose.Types.ObjectId(req.user.userId) } },
-        {$group: {
-            _id: {
-              year: {
-                $year: '$createdAt',
-              },
-              month: {
-                $month: '$createdAt',
-              },
+        {
+            $group: {
+                _id: {
+                    year: {
+                        $year: '$createdAt',
+                    },
+                    month: {
+                        $month: '$createdAt',
+                    },
+                },
+                count: { $sum: 1 },
             },
-            count: { $sum: 1 },
-          },},
+        },
         { $sort: { '_id.year': -1, '_id.month': -1 } },
         { $limit: 6 },
     ]);
@@ -109,7 +147,7 @@ const showStats = async (req, res) => {
     }).reverse();
 
     res.status(StatusCodes.OK).json({ defaultStats, monthlyApplications });
-} 
+}
 
 export {
     createJob,
