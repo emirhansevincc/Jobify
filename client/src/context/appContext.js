@@ -35,6 +35,7 @@ import {
     SHOW_STATS_BEGIN,
     SHOW_STATS_SUCCESS,
     CLEAR_FILTERS,
+    CHANGE_PAGE,
 } from './actions';
 
 const token = localStorage.getItem('token');
@@ -221,11 +222,11 @@ const AppProvider = ({ children }) => {
       };
 
     const getJobs = async () => {
-        const { search, searchStatus, searchType, sort } = state;
+        const { search, searchStatus, searchType, sort, page } = state;
       // We define the url like this for the easily modify the url
-      let url = `/jobs?status=${searchStatus}&jobType=${searchType}&sort=${sort}&page=${state.page}&limit=${state.limit}`
+      let url = `/jobs?page=${page}&status=${searchStatus}&jobType=${searchType}&sort=${sort}&&limit=${state.limit}`
 
-        if (search) {
+        if (search) { 
             url = url + `&search=${search}`
         }
     
@@ -243,7 +244,7 @@ const AppProvider = ({ children }) => {
         })
       } catch (error) {
         console.log(error.response)
-        // logoutUser() I make a comment because I want to see the error message. In the real project, I will uncomment this line.
+        logoutUser()
       }
       clearAlert()
     }
@@ -303,6 +304,10 @@ const AppProvider = ({ children }) => {
         dispatch({ type: CLEAR_FILTERS });
     };
 
+    const changePage = (page) => {
+        dispatch({ type: CHANGE_PAGE, payload: { page } })
+    }
+
     return (
         <AppContext.Provider value={{
             ...state,
@@ -324,6 +329,7 @@ const AppProvider = ({ children }) => {
             editJob,
             showStats,
             clearFilters,
+            changePage,
         }}>
             {children}
         </AppContext.Provider>

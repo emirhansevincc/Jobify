@@ -35,7 +35,7 @@ const getAllJobs = async (req, res) => {
         queryObject.position = { $regex: search, $options: 'i' };
     }
 
-    console.log(queryObject);
+    // console.log(queryObject);
 
     // NO AWAIT
     let result = Job.find(queryObject);
