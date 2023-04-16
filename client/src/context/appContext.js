@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useReducer, useContext, useEffect } from 'react';
+import { useReducer, useContext } from 'react';
 import reducer from "./reducer";
 import axios from "axios";
 
@@ -295,7 +295,7 @@ const AppProvider = ({ children }) => {
             dispatch({ type: SHOW_STATS_SUCCESS, payload: { stats: data.defaultStats, monthlyApplications: data.monthlyApplications } });
         } catch (error) {
             console.log(error.response);
-            // logoutUser();
+            logoutUser();
         }
         clearAlert();
     }
