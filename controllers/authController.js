@@ -2,6 +2,8 @@ import User from '../models/User.js';
 import { StatusCodes } from 'http-status-codes';
 import { BadRequestError, UnauthenticatedError } from '../errors/index.js';
 
+import attachCookies from '../utils/attachCookies.js';
+
 const register = async (req, res) => {
     const { name, email, password } = req.body;
 
@@ -17,13 +19,14 @@ const register = async (req, res) => {
     const user = await User.create({ name, email, password });
     const token = user.createJWT();
 
+    attachCookies({ res, token });
+
     res.status(StatusCodes.OK).json({ user: {
         email: user.email,
         lastName: user.lastName,
         location: user.location,
         name: user.name,
     }, 
-    token ,
     location: user.location,
 });
 }
@@ -43,7 +46,10 @@ const login = async (req, res) => {
     }
     const token = user.createJWT();
     user.password = undefined;
-    res.status(StatusCodes.OK).json({ user, token, location: user.location });
+
+    attachCookies({ res, token });
+
+    res.status(StatusCodes.OK).json({ user, location: user.location });
 
 }
 
@@ -64,15 +70,30 @@ const updateUser = async (req, res) => {
     await user.save();
 
     const token = user.createJWT();
+    attachCookies({ res, token });
     res.status(StatusCodes.OK).json({ 
         user,
-        token,
         location: user.location,
     });
 }
 
+const getCurrentUser = async (req, res) => {
+    const user = await User.findOne({ _id: req.user.userId });
+    res.status(StatusCodes.OK).json({ user });
+}
+
+const logout = async (req, res) => {
+    res.cookie('token', 'logout', {
+      httpOnly: true,
+      expires: new Date(Date.now()),
+    });
+    res.status(StatusCodes.OK).json({ msg: 'user logged out!' });
+};
+
 export {
     register,
     login,
-    updateUser
+    updateUser,
+    getCurrentUser,
+    logout,
 }
